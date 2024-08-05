@@ -1,7 +1,7 @@
 # This is a GitHub Actions workflow file
 name: Java Docker Build and Run
 
-# This specifies when the workflow should be triggered
+# This specifies when the workflow should be triggere
 on:
   # Trigger the workflow on push events to the main branch
   push:
