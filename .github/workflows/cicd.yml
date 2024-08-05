@@ -27,7 +27,7 @@ jobs:
 
       # Build the Docker image
       - name: Build Docker image
-        run: docker build -t my-java-app:latest .
+        run: docker build -t my-java-app:test .
 
       # Log in to Docker Hub
       - name: Log in to Docker Hub
