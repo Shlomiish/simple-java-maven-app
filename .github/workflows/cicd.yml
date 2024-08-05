@@ -1,17 +1,17 @@
 # This is a GitHub Actions workflow file
-name: Docker Build
+name: Java Docker Build and Run
 
 # This specifies when the workflow should be triggered
 on:
   # Trigger the workflow on push events to the main branch
   push:
     branches:
-      - master
+      - main
 
 # Define the jobs that will run as part of this workflow
 jobs:
-  # Define a job named 'build'
-  build:
+  # Define a job named 'build-and-run'
+  build-and-run:
     # Use the latest Ubuntu runner provided by GitHub
     runs-on: ubuntu-latest
 
@@ -22,12 +22,17 @@ jobs:
         uses: actions/checkout@v3
 
       # Set up Docker
-      - name: Set up Docker Buildx
+      - name: Set up Docker
         uses: docker/setup-buildx-action@v2
 
       # Build the Docker image
       - name: Build Docker image
-        run: |
-          docker build -t my-image:test .
-          # Optionally push the Docker image to a registry
-          # docker push my-image:latest
+        run: docker build -t my-java-app:latest .
+
+      # Run the Docker container
+      - name: Run Docker container
+        run: docker run --name my-java-app-container -d my-java-app:latest
+
+      # Optionally, you can add a step to verify that the container is running
+      - name: Verify container is running
+        run: docker ps
