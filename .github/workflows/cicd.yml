@@ -5,7 +5,7 @@ name: Java Docker Build, Test, and Push
 on:
   # Trigger the workflow on push events to the master branch
   push:
-    branches:
+    branc:
       - master
 
 # Define the jobs that will run as part of this workflow
