@@ -1,5 +1,5 @@
 # This is a GitHub Actions workflow file
-name: Java Docker Build, Test, and Push
+name: Java Docker Build, Test, and Deploy
 
 # This specifies when the workflow should be triggered
 on:
@@ -10,8 +10,8 @@ on:
 
 # Define the jobs that will run as part of this workflow
 jobs:
-  # Define a job named 'build-test-and-push'
-  build-test-and-push:
+  # Define a job named 'build-test-deploy'
+  build-test-deploy:
     # Use the latest Ubuntu runner provided by GitHub
     runs-on: ubuntu-latest
 
@@ -56,17 +56,43 @@ jobs:
         if: success()
         run: docker build -t shlomi00212/java_hello-world_app:1.0.${{ github.run_number }} .
 
-      # Log in to Docker Hub only if the Docker build was successful
+      # Log in to Docker Hub using the token
       - name: Log in to Docker Hub
         if: success()
-        run: echo "${{ secrets.DOCKER_HUB_TOKEN }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+        run: echo "${{ secrets.DOCKER_HUB_TOKEN }}" | docker login --username "${{ secrets.DOCKER_HUB_USERNAME }}" --password-stdin
 
       # Push the Docker image to Docker Hub only if the login was successful
       - name: Push Docker image
         if: success()
         run: docker push shlomi00212/java_hello-world_app:1.0.${{ github.run_number }}
 
-      # Update Maven project version only if all previous steps were successful
+      # Deploy Docker image to EC2 instance
+      - name: Deploy to EC2
+        if: success()
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          EC2_SSH_PRIVATE_KEY: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
+        run: |
+          # Install AWS CLI
+          sudo apt-get update
+          sudo apt-get install -y awscli
+          
+          # Get EC2 instance public IP
+          EC2_IP=$(aws ec2 describe-instances \
+            --filters "Name=tag:Name,Values=YourEC2InstanceTag" "Name=instance-state-name,Values=running" \
+            --query "Reservations[*].Instances[*].PublicIpAddress" \
+            --output text)
+
+          # Deploy the Docker container
+          ssh -o StrictHostKeyChecking=no -i <(echo "$EC2_SSH_PRIVATE_KEY") ec2-user@$EC2_IP << 'EOF'
+            sudo docker pull shlomi00212/java_hello-world_app:1.0.${{ github.run_number }}
+            sudo docker stop my-java-app || true
+            sudo docker rm my-java-app || true
+            sudo docker run -d --name my-java-app -p 8080:8080 shlomi00212/java_hello-world_app:1.0.${{ github.run_number }}
+          EOF
+
+      # Increment Maven project version
       - name: Increment Maven Version
         if: success()
         run: mvn versions:set -DnewVersion=1.0.${{ github.run_number }}
