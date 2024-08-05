@@ -1,18 +1,33 @@
-name: GitHub Actions Demo
-run-name: ${{ github.actor }} is testing out GitHub Actions 🚀
-on: [push]
+# This is a GitHub Actions workflow file
+name: Docker Build
+
+# This specifies when the workflow should be triggered
+on:
+  # Trigger the workflow on push events to the main branch
+  push:
+    branches:
+      - master
+
+# Define the jobs that will run as part of this workflow
 jobs:
-  Explore-GitHub-Actions:
+  # Define a job named 'build'
+  build:
+    # Use the latest Ubuntu runner provided by GitHub
     runs-on: ubuntu-latest
+
+    # Steps define the sequence of tasks to be executed in the job
     steps:
-      - run: echo "🎉 The job was automatically triggered by a ${{ github.event_name }} event."
-      - run: echo "🐧 This job is now running on a ${{ runner.os }} server hosted by GitHub!"
-      - run: echo "🔎 The name of your branch is ${{ github.ref }} and your repository is ${{ github.repository }}."
-      - name: Check out repository code
-        uses: actions/checkout@v4
-      - run: echo "💡 The ${{ github.repository }} repository has been cloned to the runner."
-      - run: echo "🖥️ The workflow is now ready to test your code on the runner."
-      - name: List files in the repository
+      # Checkout the code from the repository
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      # Set up Docker
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      # Build the Docker image
+      - name: Build Docker image
         run: |
-          ls ${{ github.workspace }}
-      - run: echo "🍏 This job's status is ${{ job.status }}."
+          docker build -t my-image:test .
+          # Optionally push the Docker image to a registry
+          # docker push my-image:latest
