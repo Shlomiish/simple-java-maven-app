@@ -26,11 +26,13 @@ jobs:
         uses: actions/setup-java@v3
         with:
           java-version: '17'
-          distribution: 'adopt-openjdk'
+          distribution: 'temurin'  # Use 'temurin' instead of 'adopt-openjdk'
 
       # Update Maven project version to increment the patch version
       - name: Increment Maven Version
-        run: mvn versions:set -DnewVersion=1.0.$((${{ github.run_number }} + 0))  # Replace with your version increment logic
+        run: mvn versions:set -DnewVersion=1.0.${{ github.run_number }}
+        env:
+          MAVEN_OPTS: '-Xmx2g'
 
       # Build the Docker image
       - name: Build Docker image
