@@ -28,14 +28,9 @@ jobs:
           java-version: '17'
           distribution: 'temurin'  # Use 'temurin' instead of 'adopt-openjdk'
 
-      # Update Maven project version to increment the patch version
-      - name: Increment Maven Version
-        run: mvn versions:set -DnewVersion=1.0.${{ github.run_number }}
-        env:
-          MAVEN_OPTS: '-Xmx2g'
-
       # Build the Docker image
       - name: Build Docker image
+        id: build-image
         run: docker build -t shlomi00212/java_hello-world_app:1.0.${{ github.run_number }} .
 
       # Log in to Docker Hub
@@ -48,3 +43,10 @@ jobs:
       # Push the Docker image to Docker Hub
       - name: Push Docker image
         run: docker push shlomi00212/java_hello-world_app:1.0.${{ github.run_number }}
+
+      # Update Maven project version only if the previous steps were successful
+      - name: Increment Maven Version
+        if: success()  # This ensures the step runs only if all previous steps succeeded
+        run: mvn versions:set -DnewVersion=1.0.${{ github.run_number }}
+        env:
+          MAVEN_OPTS: '-Xmx2g'
