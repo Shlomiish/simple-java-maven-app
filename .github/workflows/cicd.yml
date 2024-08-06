@@ -74,9 +74,8 @@ jobs:
       - name: Push Docker image
         if: success()  # Only if previous steps succeed
         run: |
-          IMAGE_TAG="1.0.${{ github.run_number }}"
-          docker build -t shlomi00212/java_hello-world_app:$IMAGE_TAG .
-          docker tag shlomi00212/java_hello-world_app:$IMAGE_TAG shlomi00212/java_hello-world_app:latest
+          docker build -t shlomi00212/java_hello-world_app:1.0.${{ github.run_number }} .
+          docker tag shlomi00212/java_hello-world_app:1.0.${{ github.run_number }} shlomi00212/java_hello-world_app:latest
        
 
       # Step 11: Deploy Docker image to EC2 instance
