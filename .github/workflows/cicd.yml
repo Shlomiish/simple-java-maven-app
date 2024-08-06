@@ -1,5 +1,5 @@
 name: Master Pipeline
-#test
+
 on:
   push:
     branches:
@@ -36,17 +36,16 @@ jobs:
       - name: Run JUnit tests
         run: mvn test
 
-      - name: Print Version File
-        run: cat version.txt
-
-      - name: Read Version
-        id: read_version
-        run: echo "VERSION=$(cat version.txt)" >> $GITHUB_ENV
-
-      - name: Print Version
-        run: echo "VERSION=${{ env.VERSION }}"
+      - name: Increment Version Number
+        if: success()  # Only run if the previous steps succeeded
+        run: |
+          chmod +x update_version.sh
+          ./update_version.sh
+          VERSION=$(cat version.txt)
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
 
       - name: Build Docker image
+        if: success()  # Only run if the previous steps succeeded
         run: |
           if [ -z "${{ env.VERSION }}" ]; then
             echo "VERSION is not set. Exiting."
@@ -56,14 +55,17 @@ jobs:
           docker tag shlomi00212/java_hello-world_app:${{ env.VERSION }} shlomi00212/java_hello-world_app:latest
 
       - name: Log in to Docker Hub
+        if: success()  # Only run if the previous steps succeeded
         run: echo "${{ secrets.DOCKER_HUB_TOKEN }}" | docker login --username "${{ secrets.DOCKER_USERNAME }}" --password-stdin
 
       - name: Push Docker image
+        if: success()  # Only run if the previous steps succeeded
         run: |
           docker push shlomi00212/java_hello-world_app:${{ env.VERSION }}
           docker push shlomi00212/java_hello-world_app:latest
 
       - name: Deploy to EC2
+        if: success()  # Only run if the previous steps succeeded
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
