@@ -71,7 +71,10 @@ jobs:
       # Step 10: Push the Docker image to Docker Hub only if the login was successful
       - name: Push Docker image
         if: success()  # Only if previous steps succeed
-        run: docker push shlomi00212/java_hello-world_app:1.0.${{ github.run_number }}
+        run: |
+          docker push shlomi00212/java_hello-world_app:1.0.${{ github.run_number }}
+          docker push shlomi00212/java_hello-world_app:latest
+       
 
       # Step 11: Deploy Docker image to EC2 instance
       - name: Deploy to EC2
