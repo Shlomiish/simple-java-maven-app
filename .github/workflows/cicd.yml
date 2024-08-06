@@ -48,10 +48,6 @@ jobs:
       - name: Build Docker image
         if: success()  # Only run if the previous steps succeeded
         run: |
-          if [ -z "${{ env.VERSION }}" ]; then
-            echo "VERSION is not set. Exiting."
-            exit 1
-          fi
           docker build -t shlomi00212/java_hello-world_app:${{ env.VERSION }} .
           docker tag shlomi00212/java_hello-world_app:${{ env.VERSION }} shlomi00212/java_hello-world_app:latest
 
