@@ -4,6 +4,7 @@ name: Java Docker Build, Test, and Deploy
 # This specifies when the workflow should be triggered
 on:
   # Trigger the workflow on push events to the master branch
+  workflow_dispatch:
   push:
     branches:
       - master
