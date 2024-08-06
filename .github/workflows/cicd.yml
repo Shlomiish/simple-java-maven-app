@@ -43,18 +43,20 @@ jobs:
       - name: Verify Maven version
         run: mvn -v
 
-      # Step 5: Update the version in pom.xml using sed
-      - name: Update version in pom.xml
-        run: sed -i 's/<version>.*<\/version>/<version>1.0.${{ github.run_number }}<\/version>/' simple-java-maven-app/pom.xml
-
-
-      # Step 6: Build the project with Maven
+      # Step 5: Build the project with Maven
       - name: Build with Maven
         run: mvn clean install
 
-      # Step 7: Run JUnit tests with Maven
+      # Step 6: Run JUnit tests with Maven
       - name: Run JUnit tests
         run: mvn test
+
+      # Step 7: Increment Maven project version
+      - name: Increment Maven Version
+        if: success()  # Only if previous steps succeed
+        run: mvn versions:set -DnewVersion=1.0.${{ github.run_number }}
+        env:
+          MAVEN_OPTS: '-Xmx2g'  # Set maximum heap size for Maven
 
       # Step 8: Build the Docker image only if tests pass
       - name: Build Docker image
