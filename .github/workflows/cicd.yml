@@ -40,7 +40,7 @@ jobs:
       - name: Increment Version Number
         if: success()  # Only run if the previous steps succeeded
         run: |
-          ./increment_version.sh
+          ./update_version.sh
           VERSION=$(tail -n 1 version.txt)
           echo "VERSION=$VERSION" >> $GITHUB_ENV
 
