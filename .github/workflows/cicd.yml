@@ -40,8 +40,9 @@ jobs:
      
       - name: Update version
         run: |
-          chmod +x ./update_version.sh
-          ./update_version.sh
+          ./increment_version.sh
+          VERSION=$(tail -n 1 version.txt)
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
 
       - name: Commit and push updated version.txt
         run: |
