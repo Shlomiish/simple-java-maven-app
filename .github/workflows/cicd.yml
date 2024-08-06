@@ -1,86 +1,59 @@
-# This is a GitHub Actions workflow file.
-name: Java Docker Build, Test, and Deploy
+name: Master Pipeline
 
-# This specifies when the workflow should be triggered
 on:
-  # Trigger the workflow on push events to the master branch
-  workflow_dispatch:
   push:
     branches:
       - master
 
-# Define the jobs that will run as part of this workflow
 jobs:
-  # Define a job named 'build-test-deploy'
   build-test-deploy:
-    # Use the latest Ubuntu runner provided by GitHub
     runs-on: ubuntu-latest
 
-    # Steps define the sequence of tasks to be executed in the job
     steps:
-      # Step 1: Checkout the code from the repository
       - name: Checkout code
         uses: actions/checkout@v3
 
-      # Step 2: Set up JDK 17
       - name: Set up JDK 17
         uses: actions/setup-java@v3
         with:
           java-version: '17'
           distribution: 'temurin'
 
-      # Step 3: Install Maven 3.9.2 manually
       - name: Install Maven 3.9.2
         run: |
           wget https://archive.apache.org/dist/maven/maven-3/3.9.2/binaries/apache-maven-3.9.2-bin.tar.gz
           tar -xzf apache-maven-3.9.2-bin.tar.gz
           sudo mv apache-maven-3.9.2 /usr/local/apache-maven
-          # Remove existing symbolic link if it exists
           sudo rm -f /usr/bin/mvn
-          # Create a new symbolic link to the installed Maven
           sudo ln -s /usr/local/apache-maven/bin/mvn /usr/bin/mvn
 
-      # Step 4: Verify the Maven version to ensure it's correctly installed
       - name: Verify Maven version
         run: mvn -v
 
-      # Step 5: Build the project with Maven
       - name: Build with Maven
         run: mvn clean install
 
-      # Step 6: Run JUnit tests with Maven
       - name: Run JUnit tests
         run: mvn test
 
-      # Step 7: Increment Maven project version
-      - name: Increment Maven Version
-        if: success()  # Only if previous steps succeed
-        run: mvn versions:set -DnewVersion=1.0.${{ github.run_number }}
-        env:
-          MAVEN_OPTS: '-Xmx2g'  # Set maximum heap size for Maven
+      - name: Read Version
+        id: read_version
+        run: echo "VERSION=$(cat version.txt)" >> $GITHUB_ENV
 
-      # Step 8: Build the Docker image only if tests pass
       - name: Build Docker image
-        if: success()  # Only if previous steps succeed
         run: |
-          docker build -t shlomi00212/java_hello-world_app:1.0.${{ github.run_number }} .
-          docker tag shlomi00212/java_hello-world_app:1.0.${{ github.run_number }} shlomi00212/java_hello-world_app:latest
-      # Step 9: Log in to Docker Hub using the token
+          docker build -t shlomi00212/java_hello-world_app:${{ env.VERSION }} .
+          docker tag shlomi00212/java_hello-world_app:${{ env.VERSION }} shlomi00212/java_hello-world_app:latest
+
       - name: Log in to Docker Hub
-        if: success()  # Only if previous steps succeed
         run: echo "${{ secrets.DOCKER_HUB_TOKEN }}" | docker login --username "${{ secrets.DOCKER_USERNAME }}" --password-stdin
 
-      # Step 10: Push the Docker image to Docker Hub only if the login was successful
       - name: Push Docker image
-        if: success()  # Only if previous steps succeed
         run: |
-           docker push shlomi00212/java_hello-world_app:1.0.${{ github.run_number }}
-           docker push shlomi00212/java_hello-world_app:latest
-       
+          docker push shlomi00212/java_hello-world_app:${{ env.VERSION }}
+          docker push shlomi00212/java_hello-world_app:latest
 
-      # Step 11: Deploy Docker image to EC2 instance
       - name: Deploy to EC2
-        if: success()  # Only if previous steps succeed
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
@@ -89,15 +62,10 @@ jobs:
           DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
           DOCKER_HUB_TOKEN: ${{ secrets.DOCKER_HUB_TOKEN }}
         run: |
-          # Configure AWS CLI with provided credentials and region
           aws configure set aws_access_key_id $AWS_ACCESS_KEY_ID
           aws configure set aws_secret_access_key $AWS_SECRET_ACCESS_KEY
           aws configure set default.region $AWS_DEFAULT_REGION
 
-          # List AWS configuration to verify setup
-          aws configure list
-
-          # Send command to EC2 instance to pull and run the Docker image
           aws ssm send-command \
             --document-name "AWS-RunShellScript" \
             --targets "Key=instanceIds,Values=$EC2_INSTANCE_ID" \
@@ -107,7 +75,7 @@ jobs:
                 "sudo docker stop $(sudo docker ps -q)",
                 "sudo docker rm $(sudo docker ps -a -q)",
                 "docker image prune -a --force",
-                "sudo docker pull shlomi00212/java_hello-world_app:1.0.${{ github.run_number }}",
-                "sudo docker run -d --name myapp shlomi00212/java_hello-world_app:1.0.${{ github.run_number }}"
+                "sudo docker pull shlomi00212/java_hello-world_app:latest",
+                "sudo docker run -d --name myapp shlomi00212/java_hello-world_app:latest"
               ]
             }'
