@@ -3,7 +3,7 @@
 # File containing the version history
 VERSION_FILE="version.txt"
 
-# Ensure the file exists and is not empty
+# Ensure the file exists and is not empty, initialize with 1.0.0 if not
 if [ ! -f "$VERSION_FILE" ] || [ ! -s "$VERSION_FILE" ]; then
   echo "1.0.0" > "$VERSION_FILE"
 fi
@@ -12,7 +12,7 @@ fi
 version=$(tail -n 1 "$VERSION_FILE")
 
 # Split the version into parts, add 1 to the last part, and join it back
-parts=(${version//./ })
+IFS='.' read -r -a parts <<< "$version"
 last=${parts[${#parts[@]}-1]}
 ((last++))
 parts[${#parts[@]}-1]=$last
