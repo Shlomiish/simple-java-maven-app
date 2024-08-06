@@ -37,15 +37,11 @@ jobs:
       - name: Run JUnit tests
         run: mvn test
 
-      - name: Increment Version Number
-        if: success()  # Only run if the previous steps succeeded
+     
+      - name: Update version
         run: |
-          version=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
-          new_version=$(echo $version | awk -F. -v OFS=. '{$NF++; print}')
-          mvn versions:set -DnewVersion=$new_version
-          mvn versions:commit
-          echo "New version: $new_version"
-          echo "new_version=$new_version" >> $GITHUB_ENV
+          chmod +x ./increment_version.sh
+          ./increment_version.sh
 
       - name: Commit and push updated version.txt
         run: |
