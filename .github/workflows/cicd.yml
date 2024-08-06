@@ -101,7 +101,7 @@ jobs:
                 "echo \"${DOCKER_HUB_TOKEN}\" | docker login --username \"${DOCKER_USERNAME}\" --password-stdin",
                 "sudo docker stop $(sudo docker ps -q)",
                 "sudo docker rm $(sudo docker ps -a -q)",
-                "sudo docker image prune -a",
+                "docker image prune -a --force",
                 "sudo docker pull shlomi00212/java_hello-world_app:1.0.${{ github.run_number }}",
                 "sudo docker run -d --name myapp shlomi00212/java_hello-world_app:1.0.${{ github.run_number }}"
               ]
