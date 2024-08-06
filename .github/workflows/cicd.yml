@@ -36,12 +36,22 @@ jobs:
       - name: Run JUnit tests
         run: mvn test
 
+      - name: Print Version File
+        run: cat version.txt
+
       - name: Read Version
         id: read_version
         run: echo "VERSION=$(cat version.txt)" >> $GITHUB_ENV
 
+      - name: Print Version
+        run: echo "VERSION=${{ env.VERSION }}"
+
       - name: Build Docker image
         run: |
+          if [ -z "${{ env.VERSION }}" ]; then
+            echo "VERSION is not set. Exiting."
+            exit 1
+          fi
           docker build -t shlomi00212/java_hello-world_app:${{ env.VERSION }} .
           docker tag shlomi00212/java_hello-world_app:${{ env.VERSION }} shlomi00212/java_hello-world_app:latest
 
