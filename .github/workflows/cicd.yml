@@ -40,10 +40,12 @@ jobs:
       - name: Increment Version Number
         if: success()  # Only run if the previous steps succeeded
         run: |
-          chmod +x update_version.sh
-          ./update_version.sh
-          VERSION=$(tail -n 1 version.txt)
-          echo "VERSION=$VERSION" >> $GITHUB_ENV
+          version=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
+          new_version=$(echo $version | awk -F. -v OFS=. '{$NF++; print}')
+          mvn versions:set -DnewVersion=$new_version
+          mvn versions:commit
+          echo "New version: $new_version"
+          echo "new_version=$new_version" >> $GITHUB_ENV
 
       - name: Commit and push updated version.txt
         run: |
