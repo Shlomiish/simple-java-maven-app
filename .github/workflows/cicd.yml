@@ -45,6 +45,16 @@ jobs:
           VERSION=$(tail -n 1 version.txt)
           echo "VERSION=$VERSION" >> $GITHUB_ENV
 
+      - name: Commit and push updated version.txt
+        run: |
+          git config user.name ${{ secrets.GIT_USERNAME }}
+          git config user.email ${{ secrets.EMAIL }}
+          git add version.txt
+          git commit -m "Update version.txt with new version"
+          git pushsecrets
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Build Docker image
         if: success()  # Only run if the previous steps succeeded
         run: |
