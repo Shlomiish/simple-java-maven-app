@@ -51,7 +51,7 @@ jobs:
           git config user.email ${{ secrets.EMAIL }}
           git add version.txt
           git commit -m "Update version.txt with new version"
-          git pushsecrets
+          git push
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
