@@ -1,7 +1,8 @@
 name: Master Pipeline
 
 on:
-  push:
+  workflow_dispatch:
+  push:    
     branches:
       - master
 
