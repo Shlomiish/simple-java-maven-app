@@ -61,8 +61,9 @@ jobs:
       # Step 8: Build the Docker image only if tests pass
       - name: Build Docker image
         if: success()  # Only if previous steps succeed
-        run: docker build -t shlomi00212/java_hello-world_app:1.0.${{ github.run_number }} .
-
+        run: |
+          docker build -t shlomi00212/java_hello-world_app:1.0.${{ github.run_number }} .
+          docker tag shlomi00212/java_hello-world_app:1.0.${{ github.run_number }} shlomi00212/java_hello-world_app:latest
       # Step 9: Log in to Docker Hub using the token
       - name: Log in to Docker Hub
         if: success()  # Only if previous steps succeed
