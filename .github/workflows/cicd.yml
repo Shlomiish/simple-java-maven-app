@@ -20,7 +20,6 @@ jobs:
       # Step 1: Checkout the code from the repository
       - name: Checkout code
         uses: actions/checkout@v3
-        # This action checks out the code from the repository so that it can be used in subsequent steps.
 
       # Step 2: Set up JDK 17
       - name: Set up JDK 17
@@ -28,37 +27,29 @@ jobs:
         with:
           java-version: '17'
           distribution: 'temurin'
-        # This action sets up JDK 17 for building the Java project.
 
       # Step 3: Install Maven 3.9.2 manually
       - name: Install Maven 3.9.2
         run: |
-          # Download Maven 3.9.2 binaries
           wget https://archive.apache.org/dist/maven/maven-3/3.9.2/binaries/apache-maven-3.9.2-bin.tar.gz
-          # Extract the downloaded archive
           tar -xzf apache-maven-3.9.2-bin.tar.gz
-          # Move Maven to /usr/local/apache-maven
           sudo mv apache-maven-3.9.2 /usr/local/apache-maven
           # Remove existing symbolic link if it exists
           sudo rm -f /usr/bin/mvn
           # Create a new symbolic link to the installed Maven
           sudo ln -s /usr/local/apache-maven/bin/mvn /usr/bin/mvn
-        # This step manually installs Maven 3.9.2, sets up the correct symbolic link, and ensures Maven is available in the path.
 
       # Step 4: Verify the Maven version to ensure it's correctly installed
       - name: Verify Maven version
         run: mvn -v
-        # This command checks the Maven version to confirm it was installed correctly.
 
       # Step 5: Build the project with Maven
       - name: Build with Maven
         run: mvn clean install
-        # This command runs the Maven build process, cleaning any previous builds and creating a new build.
 
       # Step 6: Run JUnit tests with Maven
       - name: Run JUnit tests
         run: mvn test
-        # This command runs the JUnit tests defined in the project to ensure that the code is functioning as expected.
 
       # Step 7: Increment Maven project version
       - name: Increment Maven Version
@@ -66,25 +57,21 @@ jobs:
         run: mvn versions:set -DnewVersion=1.0.${{ github.run_number }}
         env:
           MAVEN_OPTS: '-Xmx2g'  # Set maximum heap size for Maven
-        # This command increments the Maven project version to include the GitHub Actions run number, ensuring each build has a unique version.
 
       # Step 8: Build the Docker image only if tests pass
       - name: Build Docker image
         if: success()  # Only if previous steps succeed
         run: docker build -t shlomi00212/java_hello-world_app:1.0.${{ github.run_number }} .
-        # This command builds the Docker image for the application, tagging it with the new version.
 
       # Step 9: Log in to Docker Hub using the token
       - name: Log in to Docker Hub
         if: success()  # Only if previous steps succeed
         run: echo "${{ secrets.DOCKER_HUB_TOKEN }}" | docker login --username "${{ secrets.DOCKER_USERNAME }}" --password-stdin
-        # This command logs into Docker Hub using credentials stored in GitHub Secrets.
 
       # Step 10: Push the Docker image to Docker Hub only if the login was successful
       - name: Push Docker image
         if: success()  # Only if previous steps succeed
         run: docker push shlomi00212/java_hello-world_app:1.0.${{ github.run_number }}
-        # This command pushes the newly built Docker image to Docker Hub.
 
       # Step 11: Deploy Docker image to EC2 instance
       - name: Deploy to EC2
@@ -111,18 +98,11 @@ jobs:
             --targets "Key=instanceIds,Values=$EC2_INSTANCE_ID" \
             --parameters '{
               "commands": [
-                # Log in to Docker Hub on EC2 instance
                 "echo \"${DOCKER_HUB_TOKEN}\" | docker login --username \"${DOCKER_USERNAME}\" --password-stdin",
-                # Stop all running Docker containers
                 "sudo docker stop $(sudo docker ps -q)",
-                # Remove all Docker containers
                 "sudo docker rm $(sudo docker ps -a -q)",
-                # Remove all unused Docker images
                 "docker image prune -a --force",
-                # Pull the new Docker image
                 "sudo docker pull shlomi00212/java_hello-world_app:1.0.${{ github.run_number }}",
-                # Run the new Docker image
                 "sudo docker run -d --name myapp shlomi00212/java_hello-world_app:1.0.${{ github.run_number }}"
               ]
             }'
-        # This command uses AWS Systems Manager (SSM) to execute commands on the EC2 instance, including logging into Docker Hub, cleaning up old Docker containers, pulling the new Docker image, and running it.
