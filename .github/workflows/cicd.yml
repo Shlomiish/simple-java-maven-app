@@ -1,5 +1,5 @@
 name: Master Pipeline
-# Define the name of the pipeline.
+# Define the name of the pipeline
 
 on:
   push:    
